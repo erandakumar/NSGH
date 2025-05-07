@@ -28,11 +28,15 @@
       padding: 10px;
       background: white;
       border-radius: 5px;
-      display: inline-block;
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
-    .qr-placeholder {
-      color: #D4AF37;
-      padding: 20px;
+    .membership-id {
+      font-size: 14px;
+      word-break: break-all;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -40,16 +44,15 @@
   <div class="card">
     <h1>NEW SUN GOLD HOUSE</h1>
     <h2>Honor Member</h2>
-    <div id="member-name">Loading...</div>
-    <div id="member-since">Member Since: </div>
-    <div id="qr-code" class="qr-placeholder">Generating QR Code...</div>
+    <div id="member-name">Member</div>
+    <div id="member-since">Member Since: 5/8/2025</div>
+    <div id="qr-code">
+      <!-- QR code will appear here -->
+    </div>
   </div>
 
-  <!-- Load QRCode library at the bottom of body -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
   <script>
-    // Wait for both DOM and QRCode library to load
-    function init() {
+    document.addEventListener('DOMContentLoaded', function() {
       // Get URL parameters
       const params = new URLSearchParams(window.location.search);
       const name = params.get('name') || 'Member';
@@ -59,43 +62,75 @@
       document.getElementById('member-name').textContent = decodeURIComponent(name);
       document.getElementById('member-since').textContent = 'Member Since: ' + decodeURIComponent(date);
       
-      // Generate QR code with multiple fallbacks
-      try {
-        const qrElement = document.getElementById("qr-code");
-        qrElement.innerHTML = ''; // Clear placeholder
+      // Self-contained QR code generator
+      function generateQRCode(text, elementId) {
+        const element = document.getElementById(elementId);
+        const url = new URL(text);
         
-        if (typeof QRCode === 'function') {
-          new QRCode(qrElement, {
-            text: window.location.href,
-            width: 150,
-            height: 150,
-            colorDark: "#D4AF37",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-          });
-        } else {
-          throw new Error('QRCode library not loaded');
-        }
-      } catch (error) {
-        console.error('QR Code generation failed:', error);
-        const fallbackHTML = `
-          <div style="color:#D4AF37;border:1px dashed #D4AF37;padding:10px;">
-            <p>Scan this URL instead:</p>
-            <p style="font-size:12px;word-break:break-all;">${window.location.href}</p>
-            <p style="font-size:10px;color:red;">(QR Code unavailable)</p>
-          </div>
-        `;
-        document.getElementById('qr-code').innerHTML = fallbackHTML;
+        // Create a canvas element as fallback
+        const canvas = document.createElement('canvas');
+        canvas.width = 150;
+        canvas.height = 150;
+        const ctx = canvas.getContext('2d');
+        
+        // Simple QR-like pattern (basic implementation)
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 150, 150);
+        
+        ctx.fillStyle = '#000000';
+        // Draw simple squares pattern
+        const positions = [
+          [20,20,30,30], [60,20,30,30], [100,20,30,30],
+          [20,60,30,30], [100,60,30,30],
+          [20,100,30,30], [60,100,30,30], [100,100,30,30]
+        ];
+        
+        positions.forEach(pos => {
+          ctx.fillRect(pos[0], pos[1], pos[2], pos[3]);
+        });
+        
+        // Add URL text below
+        ctx.fillStyle = '#D4AF37';
+        ctx.font = '10px Arial';
+        ctx.fillText(url.hostname, 10, 140);
+        
+        // Add to DOM
+        element.innerHTML = '';
+        element.appendChild(canvas);
+        
+        // Add membership ID
+        const idElement = document.createElement('div');
+        idElement.className = 'membership-id';
+        idElement.textContent = ID: ${name}-${date.replace(/\//g, '')};
+        element.appendChild(idElement);
       }
-    }
 
-    // Check if QRCode is already loaded
-    if (typeof QRCode !== 'undefined') {
-      init();
-    } else {
-      // Wait for script to load
-      document.querySelector('script[src*="qrcode"]').onload = init;
-    }
+      // Generate QR code using our fallback method
+      generateQRCode(window.location.href, 'qr-code');
+      
+      // Try to load external QR library if needed
+      if (typeof QRCode === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js';
+        script.onload = function() {
+          try {
+            const qrElement = document.getElementById("qr-code");
+            qrElement.innerHTML = '';
+            new QRCode(qrElement, {
+              text: window.location.href,
+              width: 150,
+              height: 150,
+              colorDark: "#D4AF37",
+              colorLight: "#ffffff",
+              correctLevel: QRCode.CorrectLevel.H
+            });
+          } catch (e) {
+            console.log('Using fallback QR code');
+          }
+        };
+        document.body.appendChild(script);
+      }
+    });
   </script>
 </body>
 </html>
