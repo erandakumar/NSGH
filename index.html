@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>NSGH Membership Card</title>
+  <style>
+    body {
+      background: #000;
+      color: #D4AF37;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      border: 3px solid #D4AF37;
+      border-radius: 15px;
+      max-width: 320px;
+      width: 90%;
+      margin: 0 auto;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
+    }
+    h1 {
+      margin: 0 0 5px 0;
+      font-size: 24px;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      font-size: 18px;
+      font-weight: normal;
+    }
+    #member-name {
+      font-size: 20px;
+      margin: 15px 0;
+      padding: 10px 0;
+      border-top: 1px solid #D4AF37;
+      border-bottom: 1px solid #D4AF37;
+    }
+    #member-since {
+      margin: 15px 0;
+    }
+    #qr-code {
+      margin: 20px auto;
+      padding: 10px;
+      background: white;
+      border-radius: 8px;
+      display: inline-block;
+    }
+  </style>
+  <script 
+    src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js" 
+    integrity="sha384-3z7v0QJl8XQ5zV5Z5b0J5O0q5YAO5Y5b5E5Y5E5Y5E5Y5E5Y5E5Y5E5Y5E5Y5E5" 
+    crossorigin="anonymous">
+  </script>
+</head>
+<body>
+  <div class="card">
+    <h1>NEW SUN GOLD HOUSE</h1>
+    <h2>Honor Member</h2>
+    <div id="member-name">Loading...</div>
+    <div id="member-since">Member Since: </div>
+    <div id="qr-code"></div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const name = params.get('name') || 'Member';
+        const date = params.get('date') || new Date().toLocaleDateString();
+        
+        document.getElementById('member-name').textContent = decodeURIComponent(name);
+        document.getElementById('member-since').textContent = 'Member Since: ' + decodeURIComponent(date);
+        
+        if (window.QRCode) {
+          new QRCode(document.getElementById("qr-code"), {
+            text: window.location.href,
+            width: 150,
+            height: 150,
+            colorDark: "#D4AF37",
+            colorLight: "#000000",
+            correctLevel: QRCode.CorrectLevel.H
+          });
+        } else {
+          console.error("QRCode library not loaded");
+          document.getElementById('qr-code').innerHTML = 
+            '<p style="color:#D4AF37">QR Code unavailable</p>';
+        }
+      } catch (error) {
+        console.error("Error loading membership card:", error);
+        document.getElementById('member-name').textContent = 'Member';
+        document.getElementById('member-since').textContent = 'Member Since: ' + new Date().toLocaleDateString();
+        document.getElementById('qr-code').innerHTML = 
+          '<p style="color:#D4AF37">QR Code unavailable</p>';
+      }
+    });
+  </script>
+</body>
+</html>
