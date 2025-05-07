@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Membership Card</title>
+  <title>NSGH Membership Card</title>
   <style>
     body {
       background: #000;
@@ -23,20 +23,11 @@
       max-width: 320px;
       padding: 20px;
     }
-    #qr-code {
+    #qr-container {
       margin: 20px auto;
-      padding: 10px;
+      padding: 15px;
       background: white;
-      border-radius: 5px;
-      min-height: 150px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    .membership-id {
-      font-size: 14px;
-      word-break: break-all;
-      margin-top: 10px;
+      border-radius: 8px;
     }
   </style>
 </head>
@@ -46,90 +37,49 @@
     <h2>Honor Member</h2>
     <div id="member-name">Member</div>
     <div id="member-since">Member Since: 5/8/2025</div>
-    <div id="qr-code">
-      <!-- QR code will appear here -->
+    <div id="qr-container">
+      <!-- QR code will be inserted here -->
+      <canvas id="qr-code"></canvas>
     </div>
   </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Get URL parameters
+      // Set member info
       const params = new URLSearchParams(window.location.search);
-      const name = params.get('name') || 'Member';
-      const date = params.get('date') || new Date().toLocaleDateString();
+      document.getElementById('member-name').textContent = 
+        params.get('name') || 'Member';
+      document.getElementById('member-since').textContent = 
+        'Member Since: ' + (params.get('date') || new Date().toLocaleDateString());
       
-      // Update member info
-      document.getElementById('member-name').textContent = decodeURIComponent(name);
-      document.getElementById('member-since').textContent = 'Member Since: ' + decodeURIComponent(date);
+      // Generate simple QR code
+      const canvas = document.getElementById('qr-code');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 150;
+      canvas.height = 150;
       
-      // Self-contained QR code generator
-      function generateQRCode(text, elementId) {
-        const element = document.getElementById(elementId);
-        const url = new URL(text);
-        
-        // Create a canvas element as fallback
-        const canvas = document.createElement('canvas');
-        canvas.width = 150;
-        canvas.height = 150;
-        const ctx = canvas.getContext('2d');
-        
-        // Simple QR-like pattern (basic implementation)
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, 150, 150);
-        
-        ctx.fillStyle = '#000000';
-        // Draw simple squares pattern
-        const positions = [
-          [20,20,30,30], [60,20,30,30], [100,20,30,30],
-          [20,60,30,30], [100,60,30,30],
-          [20,100,30,30], [60,100,30,30], [100,100,30,30]
-        ];
-        
-        positions.forEach(pos => {
-          ctx.fillRect(pos[0], pos[1], pos[2], pos[3]);
-        });
-        
-        // Add URL text below
-        ctx.fillStyle = '#D4AF37';
-        ctx.font = '10px Arial';
-        ctx.fillText(url.hostname, 10, 140);
-        
-        // Add to DOM
-        element.innerHTML = '';
-        element.appendChild(canvas);
-        
-        // Add membership ID
-        const idElement = document.createElement('div');
-        idElement.className = 'membership-id';
-        idElement.textContent = ID: ${name}-${date.replace(/\//g, '')};
-        element.appendChild(idElement);
-      }
-
-      // Generate QR code using our fallback method
-      generateQRCode(window.location.href, 'qr-code');
+      // Draw QR pattern
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 150, 150);
       
-      // Try to load external QR library if needed
-      if (typeof QRCode === 'undefined') {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js';
-        script.onload = function() {
-          try {
-            const qrElement = document.getElementById("qr-code");
-            qrElement.innerHTML = '';
-            new QRCode(qrElement, {
-              text: window.location.href,
-              width: 150,
-              height: 150,
-              colorDark: "#D4AF37",
-              colorLight: "#ffffff",
-              correctLevel: QRCode.CorrectLevel.H
-            });
-          } catch (e) {
-            console.log('Using fallback QR code');
-          }
-        };
-        document.body.appendChild(script);
-      }
+      ctx.fillStyle = '#000000';
+      // Position markers
+      ctx.fillRect(10, 10, 50, 50);
+      ctx.fillRect(90, 10, 50, 50);
+      ctx.fillRect(10, 90, 50, 50);
+      
+      // Data pattern
+      const dots = [
+        [65,20], [85,20], [105,20],
+        [25,40], [45,40], [65,40], [85,40], [105,40],
+        [25,60], [65,60], [105,60],
+        [25,80], [45,80], [65,80], [85,80], [105,80],
+        [65,100], [85,100], [105,100]
+      ];
+      
+      dots.forEach(([x,y]) => {
+        ctx.fillRect(x, y, 10, 10);
+      });
     });
   </script>
 </body>
