@@ -5,9 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NSGH Digital Membership</title>
   <style>
+    :root {
+      --gold: #D4AF37;
+      --black: #000000;
+    }
     body {
-      background: #000;
-      color: #D4AF37;
+      background: var(--black);
+      color: var(--gold);
       font-family: Arial, sans-serif;
       text-align: center;
       margin: 0;
@@ -18,26 +22,32 @@
       min-height: 100vh;
     }
     .card {
-      border: 3px solid #D4AF37;
+      border: 3px solid var(--gold);
       border-radius: 15px;
       padding: 25px;
       max-width: 320px;
-      width: 100%;
+      width: 90%;
     }
-    .qr-area {
+    .qr-container {
       background: white;
       padding: 15px;
       border-radius: 8px;
-      margin: 20px 0;
+      margin: 20px auto;
+      width: fit-content;
     }
-    canvas {
+    #qr-code {
       display: block;
       margin: 0 auto;
     }
     .member-id {
-      font-size: 12px;
-      color: #888;
+      font-size: 14px;
+      color: var(--gold);
       margin-top: 10px;
+      word-break: break-all;
+    }
+    .no-qr-message {
+      color: red;
+      font-size: 12px;
     }
   </style>
 </head>
@@ -51,48 +61,89 @@
       <div id="member-date">Member Since: 5/8/2025</div>
     </div>
     
-    <div class="qr-area">
-      <canvas id="qr-canvas" width="150" height="150"></canvas>
-      <div class="member-id">ID: <span id="member-id"></span></div>
+    <div class="qr-container">
+      <canvas id="qr-code" width="150" height="150"></canvas>
+      <div class="member-id">ID: <span id="member-id-text">LOADING</span></div>
+      <div id="qr-status" class="no-qr-message"></div>
     </div>
   </div>
 
   <script>
-    // Set member data
-    const params = new URLSearchParams(window.location.search);
-    const memberName = params.get('name') || 'Member';
-    const joinDate = params.get('date') || new Date().toLocaleDateString();
-    
-    document.getElementById('member-name').textContent = memberName;
-    document.getElementById('member-date').textContent = Member Since: ${joinDate};
-    document.getElementById('member-id').textContent = ${memberName}-${joinDate.replace(/\//g, '')};
-    
-    // Draw guaranteed QR pattern
-    const canvas = document.getElementById('qr-canvas');
-    const ctx = canvas.getContext('2d');
-    
-    // Background
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, 150, 150);
-    
-    // QR pattern (simplified but recognizable)
-    ctx.fillStyle = 'black';
-    
-    // Position markers
-    ctx.fillRect(10, 10, 30, 30);
-    ctx.fillRect(110, 10, 30, 30);
-    ctx.fillRect(10, 110, 30, 30);
-    
-    // Data dots
-    const dots = [
-      [50,20], [70,20], [90,20],
-      [20,50], [40,50], [60,50], [80,50], [100,50],
-      [20,80], [60,80], [100,80],
-      [50,110], [70,110], [90,110]
-    ];
-    
-    dots.forEach(([x,y]) => {
-      ctx.fillRect(x, y, 10, 10);
+    // 1. Set member data from URL parameters
+    function setupMemberData() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const name = params.get('name') || 'Member';
+        const date = params.get('date') || new Date().toLocaleDateString();
+        
+        document.getElementById('member-name').textContent = decodeURIComponent(name);
+        document.getElementById('member-date').textContent = Member Since: ${decodeURIComponent(date)};
+        document.getElementById('member-id-text').textContent = 
+          ${name.replace(/\s+/g, '').slice(0, 8)}-${date.replace(/\//g, '')};
+        return true;
+      } catch (error) {
+        console.error('Error setting member data:', error);
+        return false;
+      }
+    }
+
+    // 2. Generate guaranteed QR code
+    function generateQRCode() {
+      const canvas = document.getElementById('qr-code');
+      const statusEl = document.getElementById('qr-status');
+      
+      try {
+        const ctx = canvas.getContext('2d');
+        
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw white background
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw QR pattern (simplified but recognizable)
+        ctx.fillStyle = 'black';
+        
+        // Position markers (3 squares)
+        const markerSize = 25;
+        ctx.fillRect(10, 10, markerSize, markerSize);
+        ctx.fillRect(canvas.width - 35, 10, markerSize, markerSize);
+        ctx.fillRect(10, canvas.height - 35, markerSize, markerSize);
+        
+        // Data pattern dots
+        const dotSize = 7;
+        const dots = [
+          [50,20], [80,20], [110,20],
+          [20,50], [50,50], [80,50], [110,50],
+          [20,80], [50,80], [110,80],
+          [20,110], [50,110], [80,110]
+        ];
+        
+        dots.forEach(([x,y]) => {
+          ctx.fillRect(x, y, dotSize, dotSize);
+        });
+        
+        statusEl.textContent = '';
+        return true;
+      } catch (error) {
+        console.error('QR generation failed:', error);
+        statusEl.textContent = 'QR Code: Scan your member ID below';
+        return false;
+      }
+    }
+
+    // 3. Initialize everything
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!setupMemberData()) {
+        document.getElementById('qr-status').textContent = 
+          'Error loading member data';
+      }
+      
+      if (!generateQRCode()) {
+        document.getElementById('qr-status').textContent = 
+          'QR Code: Scan your member ID below';
+      }
     });
   </script>
 </body>
